@@ -435,14 +435,16 @@ class MainWindow(QMainWindow):
 
     def saveSaveFile(self):
         if self.fileContent:
-            encrypt_file(self.filePath, self.fileContent, CRYPTO_KEY, CRYPTO_IV)
+            content = json.dumps(self.model.to_json())
+            encrypt_file(self.filePath, content, CRYPTO_KEY, CRYPTO_IV)
 
     def saveSaveFileAs(self):
         if self.fileContent:
             fileName, _ = QFileDialog.getSaveFileName(self, "Save Save File", "", "Save Files (*.save)")
 
             if fileName:
-                encrypt_file(fileName, self.fileContent, CRYPTO_KEY, CRYPTO_IV)
+                content = json.dumps(self.model.to_json())
+                encrypt_file(fileName, content, CRYPTO_KEY, CRYPTO_IV)
                 self.filePath = fileName
 
     def openSaveFileRaw(self):
