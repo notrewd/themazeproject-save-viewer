@@ -431,6 +431,7 @@ class MainWindow(QMainWindow):
             self.filePath = fileName
             self.fileContent = decrypt_file(fileName, CRYPTO_KEY, CRYPTO_IV)
             self.contentObject = json.loads(self.fileContent)
+            self.setWindowTitle(f"{os.path.basename(fileName)} - The Maze Project Save Viewer")
             self.refreshViewer()
 
     def saveSaveFile(self):
@@ -446,6 +447,7 @@ class MainWindow(QMainWindow):
                 content = json.dumps(self.model.to_json())
                 encrypt_file(fileName, content, CRYPTO_KEY, CRYPTO_IV)
                 self.filePath = fileName
+                self.setWindowTitle(f"{os.path.basename(fileName)} - The Maze Project Save Viewer")
 
     def openSaveFileRaw(self):
         if self.fileContent:
