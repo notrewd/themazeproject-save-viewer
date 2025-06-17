@@ -485,14 +485,59 @@ class MainWindow(QMainWindow):
             dialog = QDialog(self)
             dialog.setWindowTitle("Raw Save File")
             dialog.setWindowModality(Qt.ApplicationModal)
-            dialog.resize(400, 300)
+            dialog.resize(500, 400)
 
             textEdit = QTextEdit()
-            textEdit.setText(self.fileContent)
             textEdit.setReadOnly(True)
+            
+            # Create checkbox for toggling graph data
+            hideGraphCheckbox = QCheckBox("Hide graph data")
+            hideGraphCheckbox.setChecked(True)
+            
+            # Create checkbox for toggling prettification
+            prettifyCheckbox = QCheckBox("Prettify JSON")
+            prettifyCheckbox.setChecked(False)
+            
+            # Function to update the text content based on checkbox states
+            def updateTextContent():
+                try:
+                    data = json.loads(self.fileContent)
+                    
+                    # Filter graph data if requested
+                    if hideGraphCheckbox.isChecked():
+                        data = self._filterGraphData(data)
+                    
+                    # Format based on prettify setting
+                    if prettifyCheckbox.isChecked():
+                        content = json.dumps(data, indent=2)
+                    else:
+                        content = json.dumps(data)
+                    
+                    textEdit.setText(content)
+                    
+                except:
+                    # If parsing fails, show raw content
+                    textEdit.setText(self.fileContent)
+            
+            # Connect checkboxes to update function
+            hideGraphCheckbox.stateChanged.connect(updateTextContent)
+            prettifyCheckbox.stateChanged.connect(updateTextContent)
+              # Initial content load
+            updateTextContent()
+
+            # Create a horizontal layout for checkboxes
+            checkboxLayout = QHBoxLayout()
+            checkboxLayout.addWidget(hideGraphCheckbox)
+            checkboxLayout.addWidget(prettifyCheckbox)
+            checkboxLayout.addStretch()  # Add stretch to push checkboxes to the left
+            checkboxLayout.setSpacing(10)  # Add some space between checkboxes
+            
+            checkboxWidget = QWidget()
+            checkboxWidget.setLayout(checkboxLayout)
 
             layout = QVBoxLayout(dialog)
             layout.addWidget(textEdit)
+            layout.addWidget(checkboxWidget)
 
             dialog.exec_()
 
@@ -510,6 +555,22 @@ class MainWindow(QMainWindow):
             self.saveContentWidget.show()
         else:
             self.noFileLabel.show()
+
+    def _filterGraphData(self, data):
+        """Remove graph data from the JSON data to reduce clutter"""
+        if isinstance(data, dict):
+            filtered_data = {}
+            for key, value in data.items():
+                # Skip keys that likely contain graph data
+                if key.lower() in ['graph', 'graphs', 'graphdata', 'graph_data', 'nodes', 'edges', 'vertices']:
+                    continue
+                # Recursively filter nested structures
+                filtered_data[key] = self._filterGraphData(value)
+            return filtered_data
+        elif isinstance(data, list):
+            return [self._filterGraphData(item) for item in data]
+        else:
+            return data
 
 def main():
     app = QApplication(sys.argv)
