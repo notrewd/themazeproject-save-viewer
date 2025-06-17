@@ -213,13 +213,44 @@ class JsonModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.EditRole:
             if index.column() == 1:
                 item = index.internalPointer()
-                item.value = str(value)
+                
+                # Convert the string input back to the original type
+                converted_value = self._convert_to_original_type(str(value), item.value_type)
+                item.value = converted_value
 
                 self.dataChanged.emit(index, index, [Qt.ItemDataRole.EditRole])
 
                 return True
 
         return False
+
+    def _convert_to_original_type(self, value_str: str, original_type):
+        """Convert a string value back to its original type"""
+        if original_type == bool:
+            # Handle boolean conversion
+            lower_val = value_str.lower().strip()
+            if lower_val in ('true', '1', 'yes', 'on'):
+                return True
+            elif lower_val in ('false', '0', 'no', 'off'):
+                return False
+            else:
+                # If it's not a clear boolean, keep the original value
+                return value_str
+        elif original_type == int:
+            try:
+                return int(value_str)
+            except ValueError:
+                # If conversion fails, return the string
+                return value_str
+        elif original_type == float:
+            try:
+                return float(value_str)
+            except ValueError:
+                # If conversion fails, return the string
+                return value_str
+        else:
+            # For str and other types, return as string
+            return value_str
 
     def headerData(
         self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
